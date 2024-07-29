@@ -14,6 +14,7 @@ int work(void *arg)
 {
     int x = *(int *)arg;
     printf("%d\n", x);
+    free(arg);
     return 0;
 }
 
