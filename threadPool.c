@@ -15,15 +15,9 @@ static void *threadPoolWorker(void *threadPool)
     while (1)
     {
         assert(!pthread_mutex_lock(&x->mutex));
-        while (x->nTasks == 0 && !x->flag)
+        while (!x->nTasks && !x->flag)
         {
             assert(!pthread_cond_wait(&x->cond, &x->mutex));
-        }
-
-        if (x->nTasks == 0 && x->flag)
-        {
-            assert(!pthread_mutex_unlock(&x->mutex));
-            pthread_exit(NULL);
         }
         if (x->nTasks > 0)
         {
@@ -32,8 +26,12 @@ static void *threadPoolWorker(void *threadPool)
             x->nTasks--;
             assert(!pthread_mutex_unlock(&x->mutex));
             assert(!(*task->function)(task->arg));
-            free(task->arg);
             free(task);
+        }
+        else if (x->flag)
+        {
+            assert(!pthread_mutex_unlock(&x->mutex));
+            pthread_exit(NULL);
         }
     }
     return NULL;
