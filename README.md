@@ -33,5 +33,5 @@ int main(int argc, char *argv[])
 ```
 
 ```shell
-gcc -o threadPoolExample threadPoolExample.c.c threadPool.c -lpthread
+gcc -o threadPoolExample threadPoolExample.c threadPool.c -lpthread
 ```
