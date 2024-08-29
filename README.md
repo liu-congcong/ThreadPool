@@ -7,28 +7,61 @@ Thread Pool
 ```C
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <unistd.h>
+#include <math.h>
 #include "threadPool.h"
 
-int work(void *arg)
+typedef struct
 {
-    int x = *(int *)arg;
-    printf("%d\n", x);
+    int x;
+    pthread_mutex_t mutex;
+} Result;
+
+typedef struct
+{
+    int min;
+    int max;
+    Result *result;
+} Temp;
+
+int sum(void *arg)
+{
+    Temp *temp = (Temp *)arg;
+    int x = 0;
+    for (int i = temp->min; i < temp->max + 1; i++)
+    {
+        x += i;
+    }
+    pthread_mutex_lock(&temp->result->mutex);
+    temp->result->x += x;
+    pthread_mutex_unlock(&temp->result->mutex);
     free(arg);
     return 0;
 }
 
+
 int main(int argc, char *argv[])
 {
-    ThreadPool *threadPool = threadPoolCreate(10);
-    assert(threadPool);
-    for (int i = 0; i < 100; i++)
+    /* 0 + ... + x */
+    int x = atoi(argv[1]);
+    int threads = atoi(argv[2]);
+
+    Result result;
+    result.x = 0;
+    pthread_mutex_init(&result.mutex, NULL);
+
+    int step = ceil((float)x / threads);
+    ThreadPool *threadPool = threadPoolCreate(threads);
+    for (int i = 0; i < threads; i++)
     {
-        int *arg = malloc(sizeof(int));
-        *arg = i;
-        assert(!threadPoolPut(threadPool, work, arg));
+        Temp *temp = malloc(sizeof(Temp));
+        temp->result = &result;
+        temp->min = step * i + 1;
+        temp->max = step * (i + 1) > x ? x : step * (i + 1);
+        threadPoolPut(threadPool, sum, temp);
     }
-    assert(!threadPoolFree(threadPool));
+    threadPoolFree(threadPool);
+    printf("sum: %d\n", result.x);
     return 0;
 }
 ```
