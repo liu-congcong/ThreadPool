@@ -21,7 +21,7 @@ typedef struct ThreadPool
     int flag;
 } ThreadPool;
 
-ThreadPool* threadPoolCreate(int nThreads);
+ThreadPool *threadPoolCreate(int nThreads);
 int threadPoolPut(ThreadPool *threadPool, int (*function)(void *), void *arg);
 int threadPoolFree(ThreadPool *pool);
 
